@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
+const serverless = require("serverless-http");
 const moviesRoutes = require('./routes/movie');
 const authRoutes = require('./routes/authRoutes');
 const morgan = require('morgan');
@@ -8,11 +9,17 @@ const connectDatabase = require('./database/connection');
 
 const app = express();
 
+require("dotenv").config();
+require("../src/database/connection")();
+
 // Middlewares globais
 app.use(express.json());
 app.use(morgan('dev'));
 
 connectDatabase();
+
+module.exports.handler = serverless(app);
+
 
 app.get('/', (req, res) => {
   const resp = { message: 'Hello World!' };
