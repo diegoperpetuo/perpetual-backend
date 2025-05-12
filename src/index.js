@@ -2,7 +2,6 @@ const express = require('express');
 const mongoose = require('mongoose');
 const moviesRoutes = require('./routes/movie');
 const authRoutes = require('./routes/authRoutes');
-const morgan = require('morgan');
 
 const app = express();
 
@@ -11,7 +10,6 @@ require("../src/database/connection")();
 
 // Middlewares globais
 app.use(express.json());
-app.use(morgan('dev'));
 
 
 app.get('/', (req, res) => {
