@@ -1,87 +1,73 @@
-# 🛡️ Autenticação com Node.js, Express e MongoDB
+# Movies CRUD API com Autenticação JWT
 
-Este é um projeto backend desenvolvido em Node.js utilizando Express, MongoDB (via Mongoose) e autenticação baseada em tokens JWT. A aplicação segue a arquitetura em camadas, com organização de responsabilidades por diretórios.
+Esta é uma API Node.js com Express e MongoDB que permite a criação, leitura, atualização e exclusão de filmes. A API está protegida com autenticação JWT, garantindo que cada usuário só possa acessar seus próprios dados.
 
-## 📁 Estrutura de Pastas
+## Funcionalidades
 
-```
-src/
-├── controllers/    # Lógica das rotas
-├── services/       # Lógica de negócio
-├── models/         # Modelos Mongoose
-├── routes/         # Definição das rotas
-├── middlewares/    # Middlewares de autenticação e tratamento
-├── database/       # Conexão com o MongoDB
-├── server.js       # Ponto de entrada da aplicação
-requests/           # Scripts .sh com testes usando curl
-```
+- Cadastro e login de usuários
+- Autenticação via JWT
+- CRUD completo de filmes:
+  - Criar um filme
+  - Listar todos os filmes do usuário
+  - Ver detalhes de um filme específico
+  - Atualizar completamente ou parcialmente um filme
+  - Remover um filme
 
-## 🚀 Funcionalidades
+## Rotas
 
-### Rotas Públicas
+### Autenticação
 
-- `POST /register`: Cadastra um novo usuário no sistema.
-- `POST /login`: Autentica um usuário e retorna um token JWT.
+- `POST /auth/register` — Cria um novo usuário
+- `POST /auth/login` — Realiza login e retorna um token JWT
 
-### Rotas Protegidas
+### Filmes (Protegido por JWT)
 
-- `GET /protected`: Recurso protegido, acessível apenas com um token JWT válido no cabeçalho `Authorization`.
-
-## ✅ Validações
-
-- **E-mail**: obrigatório, formato válido, único no sistema.
-- **Senha**: obrigatória, mínimo de 6 caracteres.
-- **Campos ausentes ou inválidos** retornam erros apropriados com status HTTP corretos.
-
-## 🔐 Segurança
-
-- As senhas são armazenadas como hash usando `bcrypt`.
-- O token JWT é assinado com uma chave secreta segura (armazenada em variável de ambiente).
-- Requisições protegidas só são acessadas com um JWT válido.
-
-## ⚙️ Variáveis de Ambiente
-
-Crie um arquivo `.env` na raiz com as seguintes variáveis:
-
-```env
-PORT=5000
-MONGO_URI=mongodb+srv://<user>:<senha>@<cluster>.mongodb.net/<dbname>?retryWrites=true&w=majority
-JWT_SECRET=sua_chave_jwt_segura
+Todas as rotas abaixo exigem o cabeçalho:
+```http
+Authorization: Bearer SEU_TOKEN_AQUI
 ```
 
-## 🧪 Testes via Curl
+- `POST /movies` — Cria um novo filme
+- `GET /movies` — Lista todos os filmes do usuário autenticado
+- `GET /movies/:id` — Retorna os detalhes de um filme específico
+- `PUT /movies/:id` — Atualiza completamente os dados de um filme
+- `PATCH /movies/:id` — Atualiza parcialmente os dados de um filme
+- `DELETE /movies/:id` — Remove um filme
 
-No diretório `requests/`, você encontrará scripts `.sh` com exemplos de requisições:
+## Exemplo de Requisição `curl`
 
 ```bash
-chmod +x requests/**/*.sh  # Deixe os arquivos executáveis (caso necessário)
-
-# Registro bem-sucedido
-./requests/register/register_success.sh
-
-# Login bem-sucedido
-./requests/login/login_success.sh
-
-# Acesso protegido com token válido
-./requests/protected/protected_valid_token.sh
+curl -X POST https://SEU_DOMINIO.vercel.app/api/movies \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer SEU_TOKEN_AQUI" \
+-d '{
+  "title": "Matrix",
+  "genre": "Sci-Fi",
+  "releaseYear": 1999,
+  "rating": 9.0
+}'
 ```
 
-## 🖥️ Execução no GitHub Codespace
+## Executando Localmente
 
-1. Clone o projeto para seu Codespace.
+1. Clone o repositório
 2. Instale as dependências:
-   
+   ```bash
    npm install
-   
-3. Inicie a aplicação:
-   
+   ```
+3. Crie um arquivo `.env` com as seguintes variáveis:
+   ```env
+   MONGO_URI=seu_mongodb_uri
+   JWT_SECRET=sua_chave_secreta
+   PORT=5000
+   ```
+4. Execute o servidor:
+   ```bash
    npm run dev
-   
-4. Acesse via Thunder Client, curl ou Postman na URL:
-   
-   http://localhost:5000
-  
+   ```
 
+---
+  
 ## 📎 Demonstração
 
-[Link para o vídeo de demonstração](https://drive.google.com/file/d/1nl5ZksTQEf0zrrUm8KXUMXlECaQh6na9/view?usp=sharing)
+[Link para o vídeo de demonstração](https://drive.google.com/file/d/1rB-zMLo4DGOKWw1P-p_Njpf4cQwlly_X/view?usp=sharing)
