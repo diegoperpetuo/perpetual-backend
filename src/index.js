@@ -1,6 +1,5 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const serverless = require("serverless-http");
 const moviesRoutes = require('./routes/movie');
 const authRoutes = require('./routes/authRoutes');
 const morgan = require('morgan');
