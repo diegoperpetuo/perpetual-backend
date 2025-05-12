@@ -1,0 +1,2 @@
+curl -X GET http://localhost:5000/movies \
+-H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTViMjcyNzVmNjcwNDFlZGRjZTJkMCIsImlhdCI6MTc0NzAwOTQ4NCwiZXhwIjoxNzQ3MDEzMDg0fQ.b1zB8PjKijMN6VTjYXooyGS2ymfpqmgfI5g1dcPouzQ"

@@ -1,15 +1,23 @@
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
-const moviesRoutes = require('./src/routes/movies');
-const authRoutes = require('./src/routes/auth');
+const moviesRoutes = require('./routes/movie');
+const authRoutes = require('./routes/authRoutes');
 const morgan = require('morgan');
+const connectDatabase = require('./database/connection');
 
 const app = express();
 
 // Middlewares globais
 app.use(express.json());
 app.use(morgan('dev'));
+
+connectDatabase();
+
+app.get('/', (req, res) => {
+  const resp = { message: 'Hello World!' };
+  res.json(resp).status(200);
+});
 
 // Rotas públicas
 app.use('/auth', authRoutes);
