@@ -1,30 +1,49 @@
 const express = require('express');
-const serverless = require('serverless-http');
-const morgan = require('morgan');
+const mongoose = require('mongoose');
+const serverless = require("serverless-http");
 const moviesRoutes = require('./routes/movie');
 const authRoutes = require('./routes/authRoutes');
-const connectDatabase = require('./database/connection');
-
-require('dotenv').config();
-connectDatabase(); // conecta ao Mongo
+const morgan = require('morgan');
 
 const app = express();
+
+require("dotenv").config();
+require("../src/database/connection")();
 
 // Middlewares globais
 app.use(express.json());
 app.use(morgan('dev'));
 
-// Rotas
+module.exports.handler = serverless(app);
+
+
 app.get('/', (req, res) => {
-  res.status(200).json({ message: 'Hello from Vercel!' });
+  const resp = { message: 'Hello World!' };
+  res.json(resp).status(200);
 });
 
+// Rotas públicas
 app.use('/auth', authRoutes);
+
+// Rotas protegidas
 app.use('/movies', moviesRoutes);
 
+// Tratamento de rotas inexistentes
 app.use((req, res) => {
   res.status(404).json({ error: 'Rota não encontrada' });
 });
 
-module.exports = app;
-module.exports.handler = serverless(app);
+// Conexão com o MongoDB e inicialização do servidor
+const PORT = process.env.PORT || 3000;
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+})
+.then(() => {
+  console.log('MongoDB conectado');
+  app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
+})
+.catch(err => {
+  console.error('Erro ao conectar ao MongoDB:', err);
+});
+
