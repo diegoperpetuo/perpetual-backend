@@ -13,8 +13,6 @@ require("../src/database/connection")();
 app.use(express.json());
 app.use(morgan('dev'));
 
-module.exports.handler = serverless(app);
-
 
 app.get('/', (req, res) => {
   const resp = { message: 'Hello World!' };
