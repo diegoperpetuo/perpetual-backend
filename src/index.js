@@ -1,9 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const serverless = require("serverless-http");
 const moviesRoutes = require('./routes/movie');
 const authRoutes = require('./routes/authRoutes');
-const morgan = require('morgan');
 
 const app = express();
 
@@ -12,9 +10,6 @@ require("../src/database/connection")();
 
 // Middlewares globais
 app.use(express.json());
-app.use(morgan('dev'));
-
-module.exports.handler = serverless(app);
 
 
 app.get('/', (req, res) => {
