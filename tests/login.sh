@@ -1,7 +1,7 @@
 #!/bin/bash
 
-API_URL="http://localhost:5000/api"
-EMAIL="teste@exemplo.com"
+API_URL="http://localhost:5000"
+EMAIL="teste@example.com"
 PASSWORD="123456"
 
 echo "🟢 Fazendo login para obter token..."

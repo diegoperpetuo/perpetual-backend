@@ -1,11 +1,11 @@
 #!/bin/bash
 
-API_URL="http://localhost:5000/api"
-EMAIL="teste@exemplo.com"
-PASSWORD="123456"
-
 echo "🟡 Registrando usuário..."
-curl -X POST $API_URL/auth/register \
+
+curl -X POST http://localhost:5000/auth/register \
   -H "Content-Type: application/json" \
-  -d "{\"email\": \"$EMAIL\", \"password\": \"$PASSWORD\"}"
-echo
+  -d '{
+    "name": "Usuário Teste",
+    "email": "teste@example.com",
+    "password": "123456"
+  }'
