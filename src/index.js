@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const moviesRoutes = require('./routes/movie');
 const authRoutes = require('./routes/authRoutes');
+const userRoutes = require('./routes/userRoutes');
 
 const app = express();
 
@@ -22,6 +23,8 @@ app.use('/auth', authRoutes);
 
 // Rotas protegidas
 app.use('/movies', moviesRoutes);
+
+app.use('/api', userRoutes);
 
 // Tratamento de rotas inexistentes
 app.use((req, res) => {
