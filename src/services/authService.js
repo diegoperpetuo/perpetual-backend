@@ -8,7 +8,6 @@ const isValidEmail = (email) => {
 };
 
 const isValidPassword = (password) => {
-  // Verifica se é string, não está vazia, e tem pelo menos 6 caracteres
   return typeof password === 'string' && password.trim().length >= 6;
 };
 

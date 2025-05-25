@@ -4,7 +4,8 @@ const bcrypt = require('bcrypt');
 const movieSchema = new mongoose.Schema({
   tmdbId: { type: Number, required: true },
   rating: { type: Number, default: null },
-  favorite: { type: Boolean, default: false }
+  favorite: { type: Boolean, default: false },
+  media_type: { type: String, required: true, enum: ['movie', 'tv'] }
 });
 
 const UserSchema = new mongoose.Schema({
@@ -12,7 +13,7 @@ const UserSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true, select: false },
   movieList: [movieSchema]
-});
+}, { timestamps: true });
 
 // Hash da senha antes de salvar
 UserSchema.pre('save', async function(next) {
