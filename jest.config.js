@@ -1,20 +1,32 @@
 // perpetual-project/perpetual-backend/jest.config.js
 module.exports = {
   testEnvironment: 'node',
-  collectCoverage: true,
-  collectCoverageFrom: [
-    "src/**/*.{js,jsx,ts,tsx}",
-    "!src/**/*.d.ts",
-    "!src/index.js",
-    "!src/database/connection.js", 
+  roots: ['<rootDir>/tests'],
+  testMatch: [
+    '**/__tests__/**/*.js',
+    '**/?(*.)+(spec|test).js'
   ],
-  coverageReporters: ["json", "lcov", "text", "html"],
+  collectCoverageFrom: [
+    'src/**/*.js',
+    '!src/index.js',
+    '!src/database/**',
+    '!**/node_modules/**'
+  ],
+  coverageDirectory: 'coverage',
+  coverageReporters: ['text', 'lcov', 'html'],
   coverageThreshold: {
     global: {
-      branches: 50,
-      functions: 50,
-      lines: 50,
-      statements: 50,
-    },
+      branches: 80,
+      functions: 80,
+      lines: 80,
+      statements: 80
+    }
   },
+  setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
+  testTimeout: 10000,
+  verbose: true,
+  forceExit: true,
+  clearMocks: true,
+  resetMocks: true,
+  restoreMocks: true
 };

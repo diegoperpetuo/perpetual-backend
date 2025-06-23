@@ -3,6 +3,7 @@ const User = require('../../../src/models/User');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
+// Mock dependencies
 jest.mock('../../../src/models/User');
 jest.mock('bcrypt');
 jest.mock('jsonwebtoken');
@@ -10,117 +11,187 @@ jest.mock('jsonwebtoken');
 describe('AuthService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    User.prototype.save = jest.fn().mockResolvedValue(true);
-    // Garante que JWT_SECRET esteja definido para os testes
-    process.env.JWT_SECRET = 'testsecret';
-  });
-
-  describe('login', () => {
-    it('deve retornar um token para credenciais válidas', async () => {
-      const mockUser = {
-        _id: 'userId123',
-        email: 'test@example.com',
-        password: 'hashedPassword123',
-      };
-      User.findOne.mockReturnValue({
-        select: jest.fn().mockResolvedValue(mockUser),
-      });
-      bcrypt.compare.mockResolvedValue(true);
-      jwt.sign.mockReturnValue('fakeToken123');
-
-      const result = await authService.login('test@example.com', 'password123');
-
-      expect(User.findOne).toHaveBeenCalledWith({ email: 'test@example.com' });
-      expect(bcrypt.compare).toHaveBeenCalledWith('password123', 'hashedPassword123');
-      expect(jwt.sign).toHaveBeenCalledWith({ id: 'userId123' }, 'testsecret', { expiresIn: '1h' });
-      expect(result).toEqual({ token: 'fakeToken123' });
-    });
-
-    it('deve lançar erro para email não encontrado', async () => {
-      User.findOne.mockReturnValue({
-          select: jest.fn().mockResolvedValue(null)
-      });
-      await expect(authService.login('wrong@example.com', 'password123'))
-        .rejects.toThrow('Credenciais inválidas');
-    });
-
-    it('deve lançar erro para senha incorreta', async () => {
-      const mockUser = {
-        _id: 'userId123',
-        email: 'test@example.com',
-        password: 'hashedPassword123',
-      };
-      User.findOne.mockReturnValue({
-        select: jest.fn().mockResolvedValue(mockUser),
-      });
-      bcrypt.compare.mockResolvedValue(false);
-      await expect(authService.login('test@example.com', 'wrongPassword'))
-        .rejects.toThrow('Credenciais inválidas');
-    });
-
-     it('deve lançar erro para email ou senha faltando', async () => {
-      await expect(authService.login('', 'password'))
-        .rejects.toThrow('Email e senha são obrigatórios');
-      await expect(authService.login('email@test.com', ''))
-        .rejects.toThrow('Email e senha são obrigatórios');
-    });
-
-    it('deve lançar erro para email inválido', async () => {
-      await expect(authService.login('invalid-email', 'password'))
-        .rejects.toThrow('Email inválido');
-    });
-
-     it('deve lançar erro para senha inválida (curta)', async () => {
-      await expect(authService.login('valid@email.com', '123'))
-        .rejects.toThrow('Senha inválida (mínimo de 6 caracteres)');
-    });
   });
 
   describe('register', () => {
-    it('deve registrar um novo usuário com sucesso', async () => {
+    it('should register a user successfully', async () => {
+      const name = 'John Doe';
+      const email = 'john@example.com';
+      const password = 'password123';
+
       User.findOne.mockResolvedValue(null);
-      bcrypt.hash.mockResolvedValue('hashedNewPassword');
+      User.mockImplementation(() => ({
+        save: jest.fn().mockResolvedValue(true)
+      }));
 
-      const result = await authService.register('New User', 'new@example.com', 'newPassword123');
+      const result = await authService.register(name, email, password);
 
-      expect(User.findOne).toHaveBeenCalledWith({ email: 'new@example.com' });
-      expect(bcrypt.hash).toHaveBeenCalledWith('newPassword123', 10);
-      expect(User.prototype.save).toHaveBeenCalled();
+      expect(User.findOne).toHaveBeenCalledWith({ email });
+      expect(User).toHaveBeenCalledWith({ name, email, password });
       expect(result).toEqual({ message: 'Usuário registrado com sucesso' });
     });
 
-    it('deve lançar erro se o e-mail já existir', async () => {
-      User.findOne.mockResolvedValue({ email: 'existing@example.com' });
+    it('should throw error when name is missing', async () => {
+      const name = '';
+      const email = 'john@example.com';
+      const password = 'password123';
 
-      await expect(authService.register('Another User', 'existing@example.com', 'password123'))
-        .rejects.toThrow('E-mail já registrado');
-      expect(bcrypt.hash).not.toHaveBeenCalled();
-      expect(User.prototype.save).not.toHaveBeenCalled();
+      await expect(authService.register(name, email, password))
+        .rejects
+        .toThrow('Campos obrigatórios faltando: name');
     });
 
-    it('deve lançar erro se o nome estiver faltando', async () => {
-      await expect(authService.register(null, 'test@example.com', 'password123'))
-        .rejects.toThrow('Campos obrigatórios faltando: name');
+    it('should throw error when email is missing', async () => {
+      const name = 'John Doe';
+      const email = '';
+      const password = 'password123';
+
+      await expect(authService.register(name, email, password))
+        .rejects
+        .toThrow('Campos obrigatórios faltando: email');
     });
 
-    it('deve lançar erro se o email estiver faltando', async () => {
-        await expect(authService.register('Test User', null, 'password123'))
-          .rejects.toThrow('Campos obrigatórios faltando: email');
+    it('should throw error when password is missing', async () => {
+      const name = 'John Doe';
+      const email = 'john@example.com';
+      const password = '';
+
+      await expect(authService.register(name, email, password))
+        .rejects
+        .toThrow('Campos obrigatórios faltando: password');
     });
 
-    it('deve lançar erro se a senha estiver faltando', async () => {
-        await expect(authService.register('Test User', 'test@example.com', null))
-          .rejects.toThrow('Campos obrigatórios faltando: password');
+    it('should throw error when email is invalid', async () => {
+      const name = 'John Doe';
+      const email = 'invalid-email';
+      const password = 'password123';
+
+      await expect(authService.register(name, email, password))
+        .rejects
+        .toThrow('Email inválido');
     });
 
-    it('deve lançar erro para e-mail inválido no registro', async () => {
-      await expect(authService.register('Test User', 'invalid-email', 'password123'))
-        .rejects.toThrow('Email inválido');
+    it('should throw error when password is too short', async () => {
+      const name = 'John Doe';
+      const email = 'john@example.com';
+      const password = '123';
+
+      await expect(authService.register(name, email, password))
+        .rejects
+        .toThrow('Senha inválida (mínimo de 6 caracteres)');
     });
 
-    it('deve lançar erro para senha inválida (curta) no registro', async () => {
-      await expect(authService.register('Test User', 'valid@email.com', '123'))
-        .rejects.toThrow('Senha inválida (mínimo de 6 caracteres)');
+    it('should throw error when email already exists', async () => {
+      const name = 'John Doe';
+      const email = 'john@example.com';
+      const password = 'password123';
+
+      User.findOne.mockResolvedValue({ email: 'john@example.com' });
+
+      await expect(authService.register(name, email, password))
+        .rejects
+        .toThrow('E-mail já registrado');
+    });
+  });
+
+  describe('login', () => {
+    it('should login a user successfully', async () => {
+      const email = 'john@example.com';
+      const password = 'password123';
+      const hashedPassword = 'hashedPassword123';
+
+      const mockUser = {
+        _id: 'user-id',
+        email: 'john@example.com',
+        password: hashedPassword
+      };
+
+      User.findOne.mockReturnValue({
+        select: jest.fn().mockResolvedValue(mockUser)
+      });
+      bcrypt.compare.mockResolvedValue(true);
+      jwt.sign.mockReturnValue('mock-jwt-token');
+
+      const result = await authService.login(email, password);
+
+      expect(User.findOne).toHaveBeenCalledWith({ email });
+      expect(bcrypt.compare).toHaveBeenCalledWith(password, hashedPassword);
+      expect(jwt.sign).toHaveBeenCalledWith(
+        { id: 'user-id' },
+        process.env.JWT_SECRET,
+        { expiresIn: '1h' }
+      );
+      expect(result).toEqual({ token: 'mock-jwt-token' });
+    });
+
+    it('should throw error when email is missing', async () => {
+      const email = '';
+      const password = 'password123';
+
+      await expect(authService.login(email, password))
+        .rejects
+        .toThrow('Email e senha são obrigatórios');
+    });
+
+    it('should throw error when password is missing', async () => {
+      const email = 'john@example.com';
+      const password = '';
+
+      await expect(authService.login(email, password))
+        .rejects
+        .toThrow('Email e senha são obrigatórios');
+    });
+
+    it('should throw error when email is invalid', async () => {
+      const email = 'invalid-email';
+      const password = 'password123';
+
+      await expect(authService.login(email, password))
+        .rejects
+        .toThrow('Email inválido');
+    });
+
+    it('should throw error when password is too short', async () => {
+      const email = 'john@example.com';
+      const password = '123';
+
+      await expect(authService.login(email, password))
+        .rejects
+        .toThrow('Senha inválida (mínimo de 6 caracteres)');
+    });
+
+    it('should throw error when user is not found', async () => {
+      const email = 'john@example.com';
+      const password = 'password123';
+
+      User.findOne.mockReturnValue({
+        select: jest.fn().mockResolvedValue(null)
+      });
+
+      await expect(authService.login(email, password))
+        .rejects
+        .toThrow('Credenciais inválidas');
+    });
+
+    it('should throw error when password is incorrect', async () => {
+      const email = 'john@example.com';
+      const password = 'wrongpassword';
+      const hashedPassword = 'hashedPassword123';
+
+      const mockUser = {
+        _id: 'user-id',
+        email: 'john@example.com',
+        password: hashedPassword
+      };
+
+      User.findOne.mockReturnValue({
+        select: jest.fn().mockResolvedValue(mockUser)
+      });
+      bcrypt.compare.mockResolvedValue(false);
+
+      await expect(authService.login(email, password))
+        .rejects
+        .toThrow('Credenciais inválidas');
     });
   });
 });

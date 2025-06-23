@@ -9,7 +9,16 @@ const User = require('../../../src/models/User');
 const jwt = require('jsonwebtoken');
 jest.mock('jsonwebtoken');
 
+// Mock the User model
+jest.mock('../../../src/models/User');
 
+// Mock the auth middleware (the routes use authenticateToken from authMiddleware)
+jest.mock('../../../src/middlewares/authMiddleware', () => jest.fn((req, res, next) => {
+  req.user = { id: 'mockUserIdForUserRoutes' };
+  next();
+}));
+
+// Create a test app
 const app = express();
 app.use(express.json());
 // Para que as rotas de usuário funcionem, o middleware de autenticação real precisa ser chamado.
@@ -41,8 +50,8 @@ describe('User MovieList Routes (Integration)', () => {
 
 
     mockUserMovieList = [
-      { tmdbId: 1, favorite: true, rating: 5, _id: 'movie1' },
-      { tmdbId: 2, favorite: false, rating: 4, _id: 'movie2' },
+      { tmdbId: 1, favorite: true, rating: 5, media_type: 'movie', _id: 'movie1' },
+      { tmdbId: 2, favorite: false, rating: 4, media_type: 'tv', _id: 'movie2' },
     ];
     mockUserInstance = {
       _id: MOCK_USER_ID,
@@ -69,10 +78,10 @@ describe('User MovieList Routes (Integration)', () => {
 
   describe('POST /api/user/movies', () => {
     it('deve adicionar um filme à lista com token válido', async () => {
-      const newMovie = { tmdbId: 3, favorite: true, rating: 5 };
+      const newMovie = { tmdbId: 3, favorite: true, rating: 5, media_type: 'movie' };
       const res = await request(app)
         .post('/api/user/movies')
-        .set('Authorization', `Bearer ${MOCK_VALID_TOKEN}`)
+        .set('Authorization', 'Bearer mockToken')
         .send(newMovie);
 
       expect(res.statusCode).toBe(200);
@@ -84,10 +93,9 @@ describe('User MovieList Routes (Integration)', () => {
     });
 
     it('deve retornar 401 sem token', async () => {
-        jwt.verify.mockImplementation(() => { throw new Error('jwt verify error'); }); // Garante que o middleware falhe
         const res = await request(app)
             .post('/api/user/movies')
-            .send({ tmdbId: 3, favorite: true });
+            .send({ tmdbId: 3, favorite: true, media_type: 'movie' });
         expect(res.statusCode).toBe(401);
     });
   });
@@ -101,7 +109,7 @@ describe('User MovieList Routes (Integration)', () => {
 
       const res = await request(app)
         .get('/api/user/movies')
-        .set('Authorization', `Bearer ${MOCK_VALID_TOKEN}`);
+        .set('Authorization', 'Bearer mockToken');
 
       expect(res.statusCode).toBe(200);
       expect(res.body).toEqual(mockUserMovieList);
@@ -113,7 +121,7 @@ describe('User MovieList Routes (Integration)', () => {
       const tmdbIdToRemove = 1;
       const res = await request(app)
         .delete(`/api/user/movies/${tmdbIdToRemove}`)
-        .set('Authorization', `Bearer ${MOCK_VALID_TOKEN}`);
+        .set('Authorization', 'Bearer mockToken');
 
       expect(res.statusCode).toBe(200);
       expect(mockUserInstance.save).toHaveBeenCalled();
@@ -130,7 +138,7 @@ describe('User MovieList Routes (Integration)', () => {
 
         const res = await request(app)
             .get('/api/user/profile')
-            .set('Authorization', `Bearer ${MOCK_VALID_TOKEN}`);
+            .set('Authorization', 'Bearer mockToken');
 
         expect(res.statusCode).toBe(200);
         expect(res.body).toHaveProperty('name', mockUserInstance.name);

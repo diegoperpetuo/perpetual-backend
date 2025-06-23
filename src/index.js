@@ -11,7 +11,12 @@ const swaggerUi = require('swagger-ui-express');
 const app = express();
 
 require("dotenv").config();
-require("../src/database/connection")();
+
+// Only connect to database if not in test environment
+if (process.env.NODE_ENV !== 'test') {
+  const connectDatabase = require('./database/connection');
+  connectDatabase();
+}
 
 app.use(cors());
 app.use(express.json());
@@ -31,15 +36,21 @@ app.use((req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-.then(() => {
-  console.log('MongoDB conectado');
-  app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
-})
-.catch(err => {
-  console.error('Erro ao conectar ao MongoDB:', err);
-});
+
+// Only start server if not in test environment
+if (process.env.NODE_ENV !== 'test') {
+  mongoose.connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+  })
+  .then(() => {
+    console.log('MongoDB conectado');
+    app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
+  })
+  .catch(err => {
+    console.error('Erro ao conectar ao MongoDB:', err);
+  });
+}
+
+module.exports = app;
 
