@@ -46,9 +46,6 @@ jobs:
         run: npm run lint || echo "Lint não configurado"
       - name: Testes unitários
         run: npm test -- --coverage --testPathPattern="unit" --passWithNoTests
-      - name: Esperar MongoDB
-        run: |
-          timeout 60 bash -c 'until mongosh --eval "db.runCommand(\"ping\").ok"; do sleep 2; done'
       - name: Testes de integração
         run: npm test -- --testPathPattern="integration" --passWithNoTests
 
