@@ -19,43 +19,82 @@ describe('Auth Routes Integration Tests', () => {
     process.env.JWT_SECRET = 'testsecret'; // Necessário para o middleware real e para mock do jwt.verify
   });
 
-  describe('POST /auth/register (com app mockando serviço)', () => {
-    it('deve registrar um novo usuário com sucesso e retornar 201', async () => {
+  describe('POST /auth/register', () => {
+    it('should register a user successfully', async () => {
+      const userData = {
+        name: 'John Doe',
+        email: 'john@example.com',
+        password: 'password123'
+      };
+
       authService.register.mockResolvedValue({ message: 'Usuário registrado com sucesso' });
+
       const res = await request(app)
         .post('/auth/register')
-        .send({ name: 'Test User', email: 'test@example.com', password: 'password123' });
+        .send(userData);
+
       expect(res.statusCode).toBe(201);
       expect(res.body).toEqual({ message: 'Usuário registrado com sucesso' });
+      expect(authService.register).toHaveBeenCalledWith(
+        userData.name,
+        userData.email,
+        userData.password
+      );
     });
 
-    it('deve retornar 400 para dados de registro inválidos', async () => {
-      authService.register.mockRejectedValue(new Error('Dados inválidos'));
+    it('should handle registration error', async () => {
+      const userData = {
+        name: 'John Doe',
+        email: 'invalid-email',
+        password: 'password123'
+      };
+
+      authService.register.mockRejectedValue(new Error('Email inválido'));
+
       const res = await request(app)
         .post('/auth/register')
-        .send({ name: 'Test User' });
+        .send(userData);
+
       expect(res.statusCode).toBe(400);
-      expect(res.body).toHaveProperty('error', 'Dados inválidos');
+      expect(res.body).toEqual({ error: 'Email inválido' });
     });
   });
 
-  describe('POST /auth/login (com app mockando serviço)', () => {
-    it('deve logar o usuário e retornar um token com status 200', async () => {
-      authService.login.mockResolvedValue({ token: 'fakeLoginToken123' });
+  describe('POST /auth/login', () => {
+    it('should login a user successfully', async () => {
+      const loginData = {
+        email: 'john@example.com',
+        password: 'password123'
+      };
+
+      authService.login.mockResolvedValue({ token: 'mock-jwt-token' });
+
       const res = await request(app)
         .post('/auth/login')
-        .send({ email: 'test@example.com', password: 'password123' });
+        .send(loginData);
+
       expect(res.statusCode).toBe(200);
-      expect(res.body).toEqual({ token: 'fakeLoginToken123' });
+      expect(res.body).toEqual({ token: 'mock-jwt-token' });
+      expect(authService.login).toHaveBeenCalledWith(
+        loginData.email,
+        loginData.password
+      );
     });
 
-    it('deve retornar 401 para credenciais de login inválidas', async () => {
+    it('should handle login error', async () => {
+      const loginData = {
+        email: 'john@example.com',
+        password: 'wrongpassword'
+      };
+
       authService.login.mockRejectedValue(new Error('Credenciais inválidas'));
+
       const res = await request(app)
         .post('/auth/login')
-        .send({ email: 'test@example.com', password: 'wrongpassword' });
+        .send(loginData);
+
       expect(res.statusCode).toBe(401);
-      expect(res.body).toHaveProperty('error', 'Credenciais inválidas');
+      expect(res.body).toEqual({ error: 'Credenciais inválidas' });
     });
   });
 
