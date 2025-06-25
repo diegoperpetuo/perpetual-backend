@@ -8,10 +8,10 @@ const movieService = require('../../../src/services/movieService');
 jest.mock('../../../src/services/movieService');
 
 // Mock the auth middleware (the routes use authMiddleware)
-jest.mock('../../../src/middlewares/authMiddleware', () => jest.fn((req, res, next) => {
+jest.mock('../../../src/middlewares/auth', () => (req, res, next) => {
   req.user = { id: 'mockUserIdForMovieRoutes' };
   next();
-}));
+});
 
 // Create a test app
 const app = express();
