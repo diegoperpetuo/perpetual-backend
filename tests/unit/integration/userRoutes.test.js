@@ -2,6 +2,7 @@ const request = require('supertest');
 const express = require('express');
 const userRoutes = require('../../../src/routes/userRoutes');
 const User = require('../../../src/models/User');
+const mongoose = require('mongoose');
 // Não precisamos mockar authMiddleware aqui, pois o teste de integração deve usar o middleware real
 // em conjunto com um token válido (ou mockar jwt.verify se não quisermos gerar tokens reais)
 
@@ -13,10 +14,15 @@ jest.mock('jsonwebtoken');
 jest.mock('../../../src/models/User');
 
 // Mock the auth middleware (the routes use authenticateToken from authMiddleware)
-jest.mock('../../../src/middlewares/authMiddleware', () => jest.fn((req, res, next) => {
-  req.user = { id: 'mockUserIdForUserRoutes' };
-  next();
-}));
+jest.mock('../../../src/middlewares/authMiddleware', () => (req, res, next) => {
+  const auth = req.headers['authorization'];
+  if (auth) {
+    req.user = { id: 'mockUserIdForUserRoutes' };
+    return next();
+  }
+  // Se não houver token, retorna 401
+  return res.status(401).json({ error: 'Token não fornecido' });
+});
 
 // Create a test app
 const app = express();
@@ -30,6 +36,7 @@ const actualAuthMiddleware = require('../../../src/middlewares/authMiddleware');
 // Re-aplicamos o prefixo /api como no index.js
 app.use('/api', userRoutes);
 
+const token = jwt.sign({ id: 'mockUserIdForUserRoutes' }, 'test-secret-key-for-github-actions');
 
 describe('User MovieList Routes (Integration)', () => {
   let mockUserInstance;
@@ -81,7 +88,7 @@ describe('User MovieList Routes (Integration)', () => {
       const newMovie = { tmdbId: 3, favorite: true, rating: 5, media_type: 'movie' };
       const res = await request(app)
         .post('/api/user/movies')
-        .set('Authorization', 'Bearer mockToken')
+        .set('Authorization', `Bearer ${token}`)
         .send(newMovie);
 
       expect(res.statusCode).toBe(200);
@@ -109,7 +116,7 @@ describe('User MovieList Routes (Integration)', () => {
 
       const res = await request(app)
         .get('/api/user/movies')
-        .set('Authorization', 'Bearer mockToken');
+        .set('Authorization', `Bearer ${token}`);
 
       expect(res.statusCode).toBe(200);
       expect(res.body).toEqual(mockUserMovieList);
@@ -121,7 +128,7 @@ describe('User MovieList Routes (Integration)', () => {
       const tmdbIdToRemove = 1;
       const res = await request(app)
         .delete(`/api/user/movies/${tmdbIdToRemove}`)
-        .set('Authorization', 'Bearer mockToken');
+        .set('Authorization', `Bearer ${token}`);
 
       expect(res.statusCode).toBe(200);
       expect(mockUserInstance.save).toHaveBeenCalled();
@@ -138,7 +145,7 @@ describe('User MovieList Routes (Integration)', () => {
 
         const res = await request(app)
             .get('/api/user/profile')
-            .set('Authorization', 'Bearer mockToken');
+            .set('Authorization', `Bearer ${token}`);
 
         expect(res.statusCode).toBe(200);
         expect(res.body).toHaveProperty('name', mockUserInstance.name);

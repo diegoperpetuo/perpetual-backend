@@ -3,6 +3,7 @@ const request = require('supertest');
 const express = require('express');
 const movieRoutes = require('../../../src/routes/movie');
 const movieService = require('../../../src/services/movieService');
+const jwt = require('jsonwebtoken');
 
 // Mock the movieService
 jest.mock('../../../src/services/movieService');
@@ -17,6 +18,8 @@ jest.mock('../../../src/middlewares/auth', () => (req, res, next) => {
 const app = express();
 app.use(express.json());
 app.use('/movies', movieRoutes);
+
+const token = jwt.sign({ id: 'mockUserIdForUserRoutes' }, 'test-secret-key-for-github-actions');
 
 describe('Movie Routes', () => {
   const mockMovie = {
@@ -39,7 +42,7 @@ describe('Movie Routes', () => {
       
       const res = await request(app)
         .post('/movies')
-        .set('Authorization', 'Bearer mockToken')
+        .set('Authorization', `Bearer ${token}`)
         .send(moviePayload);
 
       expect(res.statusCode).toBe(201);
@@ -50,7 +53,7 @@ describe('Movie Routes', () => {
     it('deve retornar 400 se o título estiver faltando', async () => {
       const res = await request(app)
         .post('/movies')
-        .set('Authorization', 'Bearer mockToken')
+        .set('Authorization', `Bearer ${token}`)
         .send({ genre: 'Test' }); // Sem título
 
       expect(res.statusCode).toBe(400);
@@ -65,7 +68,7 @@ describe('Movie Routes', () => {
       
       const res = await request(app)
         .get('/movies')
-        .set('Authorization', 'Bearer mockToken');
+        .set('Authorization', `Bearer ${token}`);
 
       expect(res.statusCode).toBe(200);
       expect(res.body).toEqual(mockMovieList);
@@ -79,7 +82,7 @@ describe('Movie Routes', () => {
       
       const res = await request(app)
         .get(`/movies/${mockMovie._id}`)
-        .set('Authorization', 'Bearer mockToken');
+        .set('Authorization', `Bearer ${token}`);
 
       expect(res.statusCode).toBe(200);
       expect(res.body).toEqual(mockMovie);
@@ -91,7 +94,7 @@ describe('Movie Routes', () => {
       
       const res = await request(app)
         .get('/movies/nonexistentid')
-        .set('Authorization', 'Bearer mockToken');
+        .set('Authorization', `Bearer ${token}`);
 
       expect(res.statusCode).toBe(404);
       expect(res.body).toHaveProperty('error', 'Filme não encontrado');
@@ -105,7 +108,7 @@ describe('Movie Routes', () => {
       
       const res = await request(app)
         .put(`/movies/${mockMovie._id}`)
-        .set('Authorization', 'Bearer mockToken')
+        .set('Authorization', `Bearer ${token}`)
         .send(updatedData);
 
       expect(res.statusCode).toBe(200);
@@ -121,7 +124,7 @@ describe('Movie Routes', () => {
       
       const res = await request(app)
         .patch(`/movies/${mockMovie._id}`)
-        .set('Authorization', 'Bearer mockToken')
+        .set('Authorization', `Bearer ${token}`)
         .send(partialData);
 
       expect(res.statusCode).toBe(200);
@@ -136,7 +139,7 @@ describe('Movie Routes', () => {
       
       const res = await request(app)
         .delete(`/movies/${mockMovie._id}`)
-        .set('Authorization', 'Bearer mockToken');
+        .set('Authorization', `Bearer ${token}`);
 
       expect(res.statusCode).toBe(200);
       expect(res.body).toHaveProperty('message', 'Filme excluído com sucesso');
@@ -148,7 +151,7 @@ describe('Movie Routes', () => {
       
       const res = await request(app)
         .delete('/movies/nonexistentidfordelete')
-        .set('Authorization', 'Bearer mockToken');
+        .set('Authorization', `Bearer ${token}`);
 
       expect(res.statusCode).toBe(404);
       expect(res.body).toHaveProperty('error', 'Filme não encontrado');
