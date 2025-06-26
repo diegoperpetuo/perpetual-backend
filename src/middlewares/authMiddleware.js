@@ -1,5 +1,4 @@
 const jwt = require('jsonwebtoken');
-const token = jwt.sign({ id: 'mockUserIdForMovieRoutes' }, 'test-secret-key-for-github-actions');
 
 const authenticate = (req, res, next) => {
   const authHeader = req.headers.authorization;

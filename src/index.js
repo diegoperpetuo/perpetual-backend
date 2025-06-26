@@ -1,16 +1,19 @@
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const moviesRoutes = require('./routes/movie');
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
+const commentRoutes = require('./routes/commentRoutes');
+const tmdbRoutes = require('./routes/tmdbRoutes');
 
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 
 const app = express();
-
-require("dotenv").config();
 
 // Only connect to database if not in test environment
 if (process.env.NODE_ENV !== 'test') {
@@ -30,6 +33,8 @@ app.use('/auth', authRoutes);
 
 app.use('/movies', moviesRoutes);
 app.use('/api', userRoutes);
+app.use('/api/comments', commentRoutes);
+app.use('/api/tmdb', tmdbRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ error: 'Rota não encontrada' });
